@@ -21,12 +21,13 @@ def Get_Command(value):
             print("Неправильный ввод(не целочисленное значение)")
 
 def Students_Department():
-    print("Студентов какого факультета вывести? Введите ID этого курса")
-    select_query = "SELECT DISTINCT department FROM Students"
+    print("Студентов какого факультета вывести? Введите название этого факультета")
+    select_query = "SELECT department FROM Students GROUP BY department"
     cursor.execute(select_query)
     result = cursor.fetchall()
     if len(result)>0:
-        Students.show()
+        for row in result:
+            print(row[0])
         index = input()
         select_query = "SELECT name, surname, date_of_birth FROM Students WHERE department=?"
         cursor.execute(select_query, (index, ))
@@ -71,6 +72,8 @@ def Student_Courses():
         result = cursor.fetchall()
         for row in result:
             print(f"Название: {row[0]}, Описание: {row[1]}")
+    else:
+        print("Нельзя выполнить операцию. Таблица студенты пустая")
 
 
 def Grade_Courses():
@@ -107,7 +110,7 @@ def Grade_Courses():
             for row in result:
                 print(f"{row[0]} {row[1]} на факультете {row[2]} получил {row[3]}")
         else:
-            print("Данного ID студента не существует")
+            print("Данного ID студента не существует или нет оценок")
     else:
         print("Невозможно выполнить операцию. Таблица Курсы явлется пустой")
 
@@ -137,7 +140,8 @@ def Average_In_Course():
             SELECT name, surname, avg(score)
             FROM Students
             INNER JOIN Grades ON Grades.student_id = Students.id
-            WHERE Students.id=? AND course_id = ?"""
+            INNER JOIN Exams ON Exams.id = Grades.exam_id
+            WHERE Students.id=? AND Exams.course_id = ?"""
             cursor.execute(select_query, (index_student, index_course))
             result = cursor.fetchall()
             for row in result:
@@ -168,11 +172,12 @@ def Average_General():
 
 def Average_Department():
     print("Средний балл учеников какого факультета вы хотите посмотреть? Введите ID факультета")
-    select_query = "SELECT DISTINCT	department FROM Students"
+    select_query = "SELECT department FROM Students GROUP BY department"
     cursor.execute(select_query)
     result = cursor.fetchall()
     if len(result)>0:
-        Students.show()
+        for row in result:
+            print(row[0])
         index = input()
         select_query = """
         SELECT department, avg(score)
@@ -182,7 +187,7 @@ def Average_Department():
         cursor.execute(select_query, (index, ))
         result = cursor.fetchall()
         for row in result:
-            print(f"Средний балл студентов на факультете {row[0]} равен {row[1]}")
+            print(f"Средний балл студентов на факультете {index} равен {row[1]}")
     else:
         print("Невозможно выполнить операцию. Таблица Курсы явлется пустой")
 
@@ -209,6 +214,7 @@ Courses.create()
 Exams.create()
 Grades.create()
 while True:
+    print("Какое действие вы хотите совершить с базой данных?")
     dic = {1: "Добавить", 2:"Изменить", 3:"Удалить", 4:"Студенты факультета", 5:"Курсы учителей", 6:"Студенты по курсу", 7:"Оценки студента по курсу", 8:"Средний балл студента по курсу", 9:"Средний балл студента в целом", 10:"Средний балл по факультету", 11:"Показать таблицы", 12:"Удалить базу данных", 13:"Закрыть программу"}
     for i in dic.keys():
         print(f"{i} - {dic[i]}")
