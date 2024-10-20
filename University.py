@@ -20,15 +20,15 @@ def Get_Command(value):
         except Exception as e:
             print("Неправильный ввод(не целочисленное значение)")
 
-def Sort_Department():
+def Students_Department():
     print("Студентов какого факультета вывести? Введите ID этого курса")
-    select_query = "SELECT * FROM Courses"
+    select_query = "SELECT DISTINCT department FROM Students"
     cursor.execute(select_query)
     result = cursor.fetchall()
     if len(result)>0:
-        Courses.show()
-        index = int(input())
-        select_query = "SELECT name, surname, date_of_birth FROM Courses INNER JOIN Students ON Courses.Title = Students.Department WHERE Courses.id=?"
+        Students.show()
+        index = input()
+        select_query = "SELECT name, surname, date_of_birth FROM Students WHERE department=?"
         cursor.execute(select_query, (index, ))
         result = cursor.fetchall()
         for row in result:
@@ -37,7 +37,7 @@ def Sort_Department():
         print("Невозможно выполнить операцию. Таблица Курсы явлется пустой")
 
 def Teacher_Courses():
-    print("Факультеты какого учителя вывести? Введите ID этого учителя")
+    print("Курсы какого учителя вывести? Введите ID этого учителя")
     select_query = "SELECT * FROM Teachers"
     cursor.execute(select_query)
     result = cursor.fetchall()
@@ -52,6 +52,26 @@ def Teacher_Courses():
     else:
         print("Невозможно выполнить операцию. Таблица Учителя явлется пустой")
 
+def Student_Courses():
+    print("Курсы какого студента вывести? Введите ID этого студента")
+    select_query = "SELECT * FROM Students"
+    cursor.execute(select_query)
+    result = cursor.fetchall()
+    if len(result)>0:
+        Students.show()
+        index = int(input())
+        select_query = """
+        SELECT title, description
+        FROM Students
+        INNER JOIN Grades ON Grades.student_id = Students.id
+        INNER JOIN Exams ON Exams.id = Grades.exam_id
+        INNER JOIN Courses ON Courses.id = Exams.course_id
+        WHERE Students.id=?"""
+        cursor.execute(select_query, (index, ))
+        result = cursor.fetchall()
+        for row in result:
+            print(f"Название: {row[0]}, Описание: {row[1]}")
+
 
 def Grade_Courses():
     print("Оценки какого студента вывести? Введите ID этого студента")
@@ -61,19 +81,27 @@ def Grade_Courses():
     if len(result)>0:
         Students.show()
         index_student = int(input())
-        print("Оценки какого факультета вывести? Введите название этого факультета")
-        select_query = "SELECT department FROM Students WHERE id = ?"
+        print("Оценки какого курса вывести? Введите ID этого курса")
+        select_query = """
+        SELECT Courses.id, title, description, teacher_id
+        FROM Students
+        INNER JOIN Grades ON Grades.student_id = Students.id
+        INNER JOIN Exams ON Exams.id = Grades.exam_id
+        INNER JOIN Courses ON Courses.id = Exams.course_id
+        WHERE Students.id=?"""
         cursor.execute(select_query, (index_student,))
         result = cursor.fetchall()
         if len(result)>0:
             for row in result:
-                print(row)
-            index_course = input()
-            select_query = """SELECT name, surname, title, score 
+                print(f"ID: {row[0]}, Название: {row[1]}, Описание: {row[2]}, ID учителя: {row[3]}")
+            index_course = int(input())
+            select_query = """
+            SELECT name, surname, title, score
             FROM Students
-            INNER JOIN Grades ON Students.id = Grades.student_id 
-            INNER JOIN Courses ON Courses.Title = Students.Department
-            WHERE title=? AND Students.id=?"""
+            INNER JOIN Grades ON Grades.student_id = Students.id
+            INNER JOIN Exams ON Exams.id = Grades.exam_id
+            INNER JOIN Courses ON Courses.id = Exams.course_id
+            WHERE Courses.id = ? AND Students.id=?"""
             cursor.execute(select_query, (index_course, index_student))
             result = cursor.fetchall()
             for row in result:
@@ -91,19 +119,25 @@ def Average_In_Course():
     if len(result)>0:
         Students.show()
         index_student = int(input())
-        print("По какому факультету рассчитать среднюю оценку? Введите ID этого факультета")
-        select_query = "SELECT Courses.id, title, description, teacher_id FROM Courses INNER JOIN Students On Courses.title = Students.department WHERE Students.id = ?"
-        cursor.execute(select_query, (index_student, ))
+        print("Оценки какого курса вывести? Введите ID этого курса")
+        select_query = """
+        SELECT Courses.id, title, description, teacher_id
+        FROM Students
+        INNER JOIN Grades ON Grades.student_id = Students.id
+        INNER JOIN Exams ON Exams.id = Grades.exam_id
+        INNER JOIN Courses ON Courses.id = Exams.course_id
+        WHERE Students.id=?"""
+        cursor.execute(select_query, (index_student,))
         result = cursor.fetchall()
         if len(result)>0:
             for row in result:
-                print(f"ID: {row[0]}, Название: {row[1]}, Описание: {row[2]}, ID Учителя: {row[3]}")
+                print(f"ID: {row[0]}, Название: {row[1]}, Описание: {row[2]}, ID учителя: {row[3]}")
             index_course = int(input())
-            select_query = """SELECT name, surname, avg(score)
+            select_query = """
+            SELECT name, surname, avg(score)
             FROM Students
             INNER JOIN Grades ON Grades.student_id = Students.id
-            INNER JOIN Courses ON Courses.title = Students.department
-            WHERE Students.id=? AND Courses.id = ?"""
+            WHERE Students.id=? AND course_id = ?"""
             cursor.execute(select_query, (index_student, index_course))
             result = cursor.fetchall()
             for row in result:
@@ -134,18 +168,18 @@ def Average_General():
 
 def Average_Department():
     print("Средний балл учеников какого факультета вы хотите посмотреть? Введите ID факультета")
-    select_query = "SELECT * FROM Courses"
+    select_query = "SELECT DISTINCT	department FROM Students"
     cursor.execute(select_query)
     result = cursor.fetchall()
     if len(result)>0:
-        Courses.show()
-        index_course = int(input())
-        select_query = """SELECT title, avg(score)
-        FROM Courses
-        INNER JOIN Exams ON Courses.id = Exams.course_id 
-        INNER JOIN Grades ON Grades.exam_id = Exams.id
-        WHERE Courses.id=?"""
-        cursor.execute(select_query, (index_course,))
+        Students.show()
+        index = input()
+        select_query = """
+        SELECT department, avg(score)
+        FROM Students
+        INNER JOIN Grades ON Grades.student_id = Students.id
+        WHERE department=?"""
+        cursor.execute(select_query, (index, ))
         result = cursor.fetchall()
         for row in result:
             print(f"Средний балл студентов на факультете {row[0]} равен {row[1]}")
@@ -175,7 +209,7 @@ Courses.create()
 Exams.create()
 Grades.create()
 while True:
-    dic = {1: "Добавить", 2:"Изменить", 3:"Удалить", 4:"Студенты факультета", 5:"Курсы учителей", 6:"Оценки студента по курсу", 7:"Средний балл студента по курсу", 8:"Средний балл студента в целом", 9:"Средний балл по факультету", 10:"Показать таблицы", 11:"Удалить базу данных", 12:"Закрыть программу"}
+    dic = {1: "Добавить", 2:"Изменить", 3:"Удалить", 4:"Студенты факультета", 5:"Курсы учителей", 6:"Студенты по курсу", 7:"Оценки студента по курсу", 8:"Средний балл студента по курсу", 9:"Средний балл студента в целом", 10:"Средний балл по факультету", 11:"Показать таблицы", 12:"Удалить базу данных", 13:"Закрыть программу"}
     for i in dic.keys():
         print(f"{i} - {dic[i]}")
     command = Get_Command(len(dic))
@@ -217,18 +251,20 @@ while True:
                 if command==1:
                     Grades.add()
     elif command == 4:
-        Sort_Department()
+        Students_Department()
     elif command == 5:
         Teacher_Courses()
     elif command == 6:
-        Grade_Courses()
+        Student_Courses()
     elif command == 7:
-        Average_In_Course()
+        Grade_Courses()
     elif command == 8:
+        Average_In_Course()
+    elif command == 9:
         Average_General()
-    elif command ==9:
+    elif command ==10:
         Average_Department()
-    elif command == 10:
+    elif command == 11:
         print("Студенты")
         Students.show()
         print("Учителя")
@@ -239,9 +275,9 @@ while True:
         Exams.show()
         print("Оценки")
         Grades.show()
-    elif command == 11:
-        Drop_DB()
     elif command == 12:
+        Drop_DB()
+    elif command == 13:
         break
 print("Завершение работы")
 db_connection.close()
