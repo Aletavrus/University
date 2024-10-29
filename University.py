@@ -207,6 +207,10 @@ def Drop_DB():
     Courses.create()
     Exams.create()
     Grades.create()
+    for table_name in ['Students', 'Teachers', 'Courses', 'Exams', 'Grades']:
+        reset_sequence_query = f"DELETE FROM sqlite_sequence WHERE name = '{table_name}';"
+        cursor.execute(reset_sequence_query)
+    db_connection.commit()
 
 Students.create()
 Teachers.create()
@@ -286,4 +290,5 @@ while True:
     elif command == 13:
         break
 print("Завершение работы")
+cursor.close()
 db_connection.close()

@@ -3,7 +3,6 @@ import Student_Utills
 
 db_connection = sqlite3.connect("university.db")
 cursor = db_connection.cursor()
-cursor.execute("PRAGMA foreign_keys = ON;")
 
 def create():
     create_table_query = """

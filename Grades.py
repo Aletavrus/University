@@ -12,8 +12,8 @@ def create():
         student_id INTEGER,
         exam_id INTEGER,
         score REAL,
-        FOREIGN KEY (exam_id) REFERENCES Exams(id),
-        FOREIGN KEY (student_id) REFERENCES Students(id)
+        FOREIGN KEY (exam_id) REFERENCES Exams(id) ON DELETE CASCADE,
+        FOREIGN KEY (student_id) REFERENCES Students(id) ON DELETE CASCADE
     );
     """
     cursor.execute(create_table_query)

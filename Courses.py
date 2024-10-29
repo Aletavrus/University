@@ -12,7 +12,7 @@ def create():
         title VARCHAR NOT NULL,
         description TEXT NOT NULL,
         teacher_id INTEGER, 
-        FOREIGN KEY (teacher_id) REFERENCES Teachers(id)
+        FOREIGN KEY (teacher_id) REFERENCES Teachers(id) ON DELETE CASCADE
     )
     """
     cursor.execute(create_table_query)
@@ -61,9 +61,12 @@ def change():
     else:
         new_value = Courses_Utills.Get_Teacher()
     data_to_update = (new_value, index)
-    cursor.execute("UPDATE Courses SET (%s) = ? WHERE id = ?" % param, data_to_update)
-    db_connection.commit()
-    print("Параметры курса обновлены")
+    try:
+        cursor.execute("UPDATE Courses SET (%s) = ? WHERE id = ?" % param, data_to_update)
+        db_connection.commit()
+        print("Параметры курса обновлены")
+    except sqlite3.IntegrityError as e:
+        print("Ошибка при добавлении данных")
 
 def delete():
     print("Данные какого курса удалить? Напишите ID курса(первое число в строке)")
@@ -72,7 +75,9 @@ def delete():
     result = cursor.fetchall()
     Courses_Utills.Print(result)
     index = Courses_Utills.Get_Command(len(result))
+    cursor.execute("PRAGMA foreign_keys = OFF;")
     delete_query = "DELETE FROM Courses WHERE id = ?"
-    cursor.execute(delete_query, index)
+    cursor.execute(delete_query, (index,))
     db_connection.commit()
+    cursor.execute("PRAGMA foreign_keys = ON;")
     print("Курс успешно удален")

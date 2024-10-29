@@ -12,7 +12,7 @@ def create():
         date DATETIME NOT NULL,
         course_id INTEGER,
         max_score REAL,
-        FOREIGN KEY (course_id) REFERENCES Courses(id)
+        FOREIGN KEY (course_id) REFERENCES Courses(id) ON DELETE CASCADE
     );
     """
     cursor.execute(create_table_query)
@@ -46,6 +46,8 @@ def delete():
     Exams_Utills.Print(result)
     index = Exams_Utills.Get_Command(len(result))
     delete_query = "DELETE FROM Exams WHERE id = ?"
+    cursor.execute("PRAGMA foreign_keys = OFF;")
     cursor.execute(delete_query, (index, ))
     db_connection.commit()
+    cursor.execute("PRAGMA foreign_keys = ON;")
     print("Экзамен успешно удален")

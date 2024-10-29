@@ -3,7 +3,6 @@ import Teachers_Utills
 
 db_connection = sqlite3.connect("university.db")
 cursor = db_connection.cursor()
-cursor.execute("PRAGMA foreign_keys = ON;")
 
 def create():
     create_table_query = """
@@ -57,7 +56,7 @@ def change():
         new_value = Teachers_Utills.Get_Surname()
     elif param=="department":
         new_value = Teachers_Utills.Get_Department()
-    data_to_update = (new_value, index)
+    data_to_update = (new_value, (index, ))
     cursor.execute("UPDATE Teachers SET (%s) = ? WHERE id = ?" % param, data_to_update)
     db_connection.commit()
     print("Параметры учителя обновлены")
@@ -70,6 +69,6 @@ def delete():
     Teachers_Utills.Print(result)
     index = Teachers_Utills.Get_Command(len(result))
     delete_query = "DELETE FROM Teachers WHERE id = ?"
-    cursor.execute(delete_query, index)
+    cursor.execute(delete_query, (index, ))
     db_connection.commit()
     print("Учитель успешно удален")
